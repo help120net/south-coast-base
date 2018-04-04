@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.south.toast.base.dao.exp.UserExpMapper">
+	
+	<select id="getMaxUsername" parameterType="cn.south.toast.base.dto.UserTypeInDTO" resultType="String">
+		SELECT MAX(USER.username)
+		FROM auth_user USER
+		WHERE user.username LIKE CONCAT(#{param.code}, '%')
+		AND user.type = #{param.num}
+	</select>
+	
+	<select id="getUserLoginOutDTO" resultType="cn.south.toast.base.dto.UserLoginOutDTO" parameterType="String">
+		SELECT 
+		user.id AS id
+		,user.username AS username 
+		,user.name AS name
+		,user.mobile AS mobile
+		,user.password AS password
+		,user.status AS status
+		,user.is_locked AS locked
+		,user.type  AS userType
+		FROM auth_user user
+		WHERE (user.username = #{username} OR user.mobile = #{username})
+		AND user.delete_flag = 0
+	</select>
+
+	<select id="selectUserTypeByUserId" resultType="java.lang.Integer">
+         SELECT _user.type FROM auth_user _user WHERE _user.id =  #{userid}
+	</select>
+
+	<select id="selectGymByUserId" resultType="java.lang.String">
+		SELECT _extend.gym_id gymId FROM base_gym_extend _extend WHERE _extend.user_id =  #{userid}
+	</select>
+
+	<select id="selectSubjectByUserId" resultType="java.lang.String">
+		SELECT _subject.id FROM base_separate_subject _subject WHERE _subject.user_id = #{userid}
+	</select>
+
+	<!--根据用户的Id查询 相关的角色信息-->
+	<select id="selectRoleMsg" parameterType="cn.south.toast.base.dto.UserInDTO" resultType="cn.south.toast.base.module.Role" >
+		SELECT
+			GROUP_CONCAT(role.id SEPARATOR ',') id,
+			GROUP_CONCAT(role.name SEPARATOR ',') NAME
+		FROM auth_role role
+		LEFT JOIN auth_user_role_rel role_rel ON role_rel.role_id =  role.id
+		LEFT JOIN auth_user ON auth_user.id = role_rel.user_id
+		WHERE auth_user.id = #{dto.id}
+	</select>
+
+	<select id="getMobile" resultType="cn.south.toast.base.module.User">
+		SELECT 
+		username
+		,mobile
+		FROM auth_user
+		WHERE 
+		delete_flag = 0
+		AND status = 2
+		AND (username = #{usernameOrMobile}
+			Or mobile = #{usernameOrMobile})
+	</select>
+
+	<select id="getUserIdByUserNameOrMobile" resultType="java.lang.String">
+		SELECT
+		id
+		FROM auth_user
+		WHERE
+		delete_flag = 0
+		AND status = 2
+		AND (username = #{usernameOrMobile}
+		Or mobile = #{usernameOrMobile})
+	</select>
+
+	<select id="UserIFExistInUserIdAndPassword" resultType="java.lang.Boolean">
+		SELECT exists(SELECT _user.id FROM auth_user _user WHERE _user.id =#{userId} AND _user.password = #{password} AND _user.delete_flag = 0 )
+	</select>
+</mapper>
